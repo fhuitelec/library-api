@@ -8,3 +8,7 @@ run = [
     'uv run ruff check --fix src',
     'uv run pyright src',
 ]
+
+[tasks.server]
+description = 'Run the API HTTP server'
+run = 'uv run library-api'
