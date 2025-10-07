@@ -3,12 +3,18 @@ uv = "latest"
 
 [tasks.lint]
 description = "Run static code analysis"
+env.LINT_DIRECTORIES = "src tests"
 run = [
-    'uv run ruff format src',
-    'uv run ruff check --fix src',
-    'uv run pyright src',
+    'uv run ruff format ${LINT_DIRECTORIES}',
+    'uv run ruff check --fix ${LINT_DIRECTORIES}',
+    'uv run pyright ${LINT_DIRECTORIES}',
 ]
 
 [tasks.server]
 description = 'Run the API HTTP server'
 run = 'uv run library-api'
+
+[tasks.test]
+alias = ['tests']
+description = 'Run the test suite'
+run = 'uv run pytest tests'
