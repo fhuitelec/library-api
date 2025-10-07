@@ -9,3 +9,23 @@ dependencies = []
 [build-system]
 requires = ["uv_build>=0.8.24,<0.9.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.406",
+    "ruff>=0.13.3",
+]
+
+[tool.ruff.lint]
+select = [
+    "B",   # flake8-bugbear: https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "D",   # pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "E",   # pycodestyle errors: https://docs.astral.sh/ruff/rules/#error-e
+    "F",   # pyflakes: https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "Q",   # flake8-quotes: https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "ANN", # flake8-annotations: https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
+]
+ignore = [
+    "D203", # incorrect-blank-line-before-class: https://docs.astral.sh/ruff/rules/incorrect-blank-line-before-class/
+    "D213"  # multi-line-summary-second-line: https://docs.astral.sh/ruff/rules/multi-line-summary-second-line/
+]
