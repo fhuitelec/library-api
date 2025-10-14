@@ -2,25 +2,29 @@
 
 import datetime
 import uuid
-from typing import Union
+from typing import Union, Annotated, Mapping, Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 import uvicorn
+from library_api.security.authentication import authentication
+from library_api.security.authorization import requires_permissions, Permission
 from pydantic import BaseModel
 
 app = FastAPI()
 
 
 @app.get("/")
-def read_root() -> dict[str, str]:
+@requires_permissions([Permission.BOOK_READ, Permission.LOAN_APPROVE], match="all")
+async def read_root(jwt: Annotated[Mapping[str, Any], Depends(authentication)]) -> dict[str, str | Mapping[str, Any]]:
     """Return a greeting message."""
-    return {"Hello": "World"}
+    return {
+        "Hello": "World",
+        "jwt": jwt,
+    }
 
 
 @app.get("/items/{item_id}")
-def read_item(
-    item_id: int, q: Union[str, None] = None
-) -> dict[str, Union[str, int, None]]:
+async def read_item(item_id: int, q: Union[str, None] = None) -> dict[str, Union[str, int, None]]:
     """Read items."""
     return {"item_id": item_id, "q": q}
 

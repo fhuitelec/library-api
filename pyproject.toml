@@ -5,8 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "cachetools>=6.2.1",
+    "cryptography>=46.0.2",
     "fastapi[standard]>=0.118.0",
     "httpx>=0.28.1",
+    "pyjwt>=2.10.1",
 ]
 
 [build-system]
@@ -22,6 +25,9 @@ dev = [
 
 [project.scripts]
 library-api = "library_api.main:server"
+
+[tool.ruff]
+line-length = 120
 
 [tool.ruff.lint]
 select = [
