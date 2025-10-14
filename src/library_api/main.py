@@ -2,20 +2,44 @@
 
 import datetime
 import uuid
-from typing import Union, Annotated, Mapping, Any
+from http import HTTPStatus
+from typing import Union, Annotated
 
-from fastapi import FastAPI, Depends
 import uvicorn
-from library_api.security.authentication import authentication
-from library_api.security.authorization import requires_permissions, Permission
+from fastapi import FastAPI, Depends
+from fastapi.exception_handlers import http_exception_handler
+from jwt import PyJWTError
+from library_api.security.authentication import authentication, JWT
+from library_api.security.authorization import requires_permissions, Permission, PermissionMatcher
+from library_api.security.exceptions import jwt_exception_handler, unauthorized_exception_handler
+from library_api.security.http import AuthenticationResponse
 from pydantic import BaseModel
+from starlette.exceptions import HTTPException
+from starlette.requests import Request
+from starlette.responses import Response
 
-app = FastAPI()
+
+async def native_http_exception_dispatcher_handler(request: Request, exc: HTTPException) -> Response:
+    """Dispatch native HTTP exceptions to specialized handlers."""
+    if exc.status_code == HTTPStatus.UNAUTHORIZED:
+        return await unauthorized_exception_handler(request, exc)
+
+    return await http_exception_handler(request, exc)
+
+
+app = FastAPI(
+    exception_handlers={PyJWTError: jwt_exception_handler, HTTPException: native_http_exception_dispatcher_handler},
+    responses={HTTPStatus.UNAUTHORIZED: {"model": AuthenticationResponse}},
+    swagger_ui_init_oauth={
+        "usePkceWithAuthorizationCodeGrant": True,
+        "clientId": "woDXg79hSdK9DAhmFFunvehAtlvArr8D",  # Todo: add settings
+    },
+)
 
 
 @app.get("/")
-@requires_permissions([Permission.BOOK_READ, Permission.LOAN_APPROVE], match="all")
-async def read_root(jwt: Annotated[Mapping[str, Any], Depends(authentication)]) -> dict[str, str | Mapping[str, Any]]:
+@requires_permissions({Permission.BOOK_READ, Permission.LOAN_APPROVE}, matcher=PermissionMatcher.ANY)
+async def read_root(jwt: Annotated[JWT, Depends(authentication)]) -> dict[str, str | JWT]:
     """Return a greeting message."""
     return {
         "Hello": "World",
@@ -31,7 +55,7 @@ async def read_item(item_id: int, q: Union[str, None] = None) -> dict[str, Union
 
 def server() -> None:
     """Run the ASGI server."""
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("library_api.main:app", host="0.0.0.0", port=8000, reload=True, server_header=False)
 
 
 class Book(BaseModel):

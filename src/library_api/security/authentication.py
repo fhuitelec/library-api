@@ -3,7 +3,7 @@
 import json
 import logging
 from datetime import timedelta
-from typing import Annotated, Any, Mapping
+from typing import Annotated, Any
 
 import httpx
 import jwt as pyjwt
@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from fastapi import Depends
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from jwt import InvalidSignatureError
+from library_api.security import JWT
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl="https://fabien-sh.eu.auth0.com/authorize?audience=library-api",
@@ -53,22 +54,21 @@ def _get_json_web_key(httpx_client: httpx.Client, kid: str | None = None) -> RSA
     return None
 
 
-def authentication(jwt: Annotated[str, Depends(oauth2_scheme)]) -> Mapping[str, Any]:
+def authentication(raw_jwt: Annotated[str, Depends(oauth2_scheme)]) -> JWT:
     """Authenticate a request using a JWT token."""
-    kid = pyjwt.get_unverified_header(jwt)["kid"]
+    kid = pyjwt.get_unverified_header(raw_jwt)["kid"]
     public_key = _get_json_web_key(httpx.Client(), kid)
 
     if public_key is None:
         msg = f"No public key found for the given kid '{kid}'."
         raise InvalidSignatureError(msg)
 
-    # Todo: handle errors here (expired token, invalid signature, etc.)
-    jwt_data = pyjwt.decode(
-        jwt=jwt,
+    jwt = pyjwt.decode(
+        jwt=raw_jwt,
         key=public_key,
         audience="library-api",
         algorithms=["RS256"],
         leeway=timedelta(seconds=10),
     )
 
-    return jwt_data  # pyright: ignore [reportReturnType]
+    return JWT(**jwt)

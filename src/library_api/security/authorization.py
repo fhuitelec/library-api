@@ -2,91 +2,61 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import StrEnum, auto
 from functools import wraps
 from typing import (
     Callable,
-    Iterable,
-    Literal,
-    Any,
-    Awaitable,
-    Protocol,
-    ParamSpec,
-    TypeVar,
-    Mapping,
-    TypeAlias,
 )
 
 from fastapi import HTTPException, status
-
-EndpointArguments = ParamSpec("EndpointArguments")
-EndpointReturn = TypeVar("EndpointReturn", covariant=True)
-
-
-class HandlerWithJWT(Protocol[EndpointArguments, EndpointReturn]):
-    """Define a FastAPI handler that must accept a `jwt` parameter.
-
-    Type parameters:
-        EndpointArguments: Capture positional and keyword argument specifications.
-        EndpointReturn: Represent the return type of the async handler.
-
-    Ensure that any decorated endpoint explicitly defines
-    a `jwt: Mapping[str, Any]` parameter in its signature.
-
-    If your encounter any error like below...
-    > cannot be assigned to parameter of type "EndpointFunction[..., Unknown]"
-
-    ...you must add a `jwt: Mapping[str, Any]` parameter to your endpoint, for example:
-        async def endpoint(jwt: Mapping[str, Any]): ...
-    """
-
-    def __call__(
-        self, jwt: Mapping[str, Any], *args: EndpointArguments.args, **kwargs: EndpointArguments.kwargs
-    ) -> Awaitable[EndpointReturn]:
-        """Define the callable signature for FastAPI handlers requiring a `jwt` argument.
-
-        Args:
-            jwt: Provide a mapping of decoded JWT claims.
-            *args: Accept positional arguments for the handler.
-            **kwargs: Accept additional keyword arguments.
-
-        Returns:
-            Return an awaitable result of type `R` produced by the handler.
-
-        """
-        ...
+from library_api.security import Permission
+from library_api.security.authentication import JWT
+from library_api.security.typing import EndpointFunction, HandlerWithJWT, EndpointArguments, EndpointReturn
 
 
-EndpointFunction: TypeAlias = HandlerWithJWT[EndpointArguments, EndpointReturn]
+class PermissionMatcher(StrEnum):
+    """Define how to match required permissions against granted permissions."""
 
+    ALL = auto()
+    ANY = auto()
 
-class Permission(StrEnum):
-    """List of available permissions."""
+    def enforce(self, required: set[Permission], granted: set[Permission]) -> bool:
+        """Check if the granted permissions satisfy the required permissions."""
+        if self == PermissionMatcher.ALL:
+            return required.issubset(granted)
 
-    BOOK_READ = "book:read"
-    BOOK_MANAGE = "book:manage"
-    LOAN_APPROVE = "loan:approve"
-    LOAN_REQUEST = "loan:request"
-    LOAN_READ = "loan:read"
+        return not required.isdisjoint(granted)
 
 
 def requires_permissions(
-    required: Iterable[Permission],
-    *,
-    match: Literal["all", "any"] = "all",
+    required: set[Permission],
+    matcher: PermissionMatcher = PermissionMatcher.ALL,
 ) -> Callable[[EndpointFunction], EndpointFunction]:
     """Enforce presence of a `jwt` parameter and validate required permissions.
 
     Args:
         required: Specify the permissions required to access the endpoint.
-                  Example: ["read:books", "write:books"].
-        match: Set to "all" to require all permissions, or "any" to require at least one.
+                  Example: {Permission.BOOK_READ, Permission.BOOK_MANAGE}.
+        matcher: Set to ALL to require all permissions, or ANY to require at least one.
 
     Returns:
         Return a decorator that checks user permissions from the provided JWT claims.
 
+    Examples:
+        @requires_permissions({Permission.BOOK_READ})
+        async def get_book(jwt: JWT, book_id: str):
+            ...
+
+        @requires_permissions({Permission.BOOK_MANAGE, Permission.LOAN_APPROVE}, PermissionMatcher.ANY)
+        async def admin_endpoint(jwt: JWT):
+            ...
+
     """
-    required_set = set(required)
+    if len(required) < 1:
+        raise ValueError("At least one permission must be specified.")
+
+    if not all(isinstance(perm, Permission) for perm in required):
+        raise ValueError("All required permissions must be valid Permission enum values.")
 
     def decorator(
         func: HandlerWithJWT[EndpointArguments, EndpointReturn],
@@ -95,13 +65,13 @@ def requires_permissions(
 
         Ensure that:
         - The endpoint defines a `jwt` parameter (enforced by typing).
-        - Runtime validation confirms that `jwt` is provided and is a Mapping.
+        - Runtime validation confirms that `jwt` is provided and is a JWT instance.
         - The user's permissions match the required permissions.
         """
 
         @wraps(func)
         async def wrapper(
-            jwt: Mapping[str, Any], *args: EndpointArguments.args, **kwargs: EndpointArguments.kwargs
+            jwt: JWT, *args: EndpointArguments.args, **kwargs: EndpointArguments.kwargs
         ) -> EndpointReturn:
             """Perform runtime authorization checks before executing the handler.
 
@@ -112,24 +82,19 @@ def requires_permissions(
             5. Invoke the wrapped handler if checks pass.
             """
             if jwt is None:
-                raise RuntimeError(
-                    "requires_permissions() decorator needs an argument 'jwt: dict' in the endpoint signature."
+                raise TypeError(
+                    "requires_permissions() decorator needs an argument "
+                    "'jwt: library_api.security.authentication.JWT' in the endpoint signature."
                 )
 
-            user_perms = set(jwt.get("permissions", []))
-            if match == "all":
-                ok = required_set.issubset(user_perms)
-            else:
-                ok = not required_set.isdisjoint(user_perms)
-
-            if not ok:
+            if not matcher.enforce(required, jwt.permissions):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail={
                         "error": "insufficient_permissions",
-                        "required": sorted(required_set),
-                        "granted": sorted(user_perms),
-                        "match": match,
+                        "required": sorted(required),
+                        "granted": sorted(jwt.permissions),
+                        "match": matcher,
                     },
                 )
 
