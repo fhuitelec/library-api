@@ -3,7 +3,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 
 
 class Permission(StrEnum):
@@ -19,10 +19,10 @@ class Permission(StrEnum):
 class JWT(BaseModel):
     """Representation of a JSON Web Token."""
 
-    issuer: str = Field(validation_alias="iss")
-    subjet: str = Field(validation_alias="sub")
-    audience: str = Field(validation_alias="aud")
-    issued_at: datetime = Field(validation_alias="iat")
-    expires_at: datetime = Field(validation_alias="exp")
-    authorized_party: str = Field(validation_alias="azp")
+    issuer: str = Field(validation_alias=AliasChoices("iss", "issuer"))
+    subjet: str = Field(validation_alias=AliasChoices("sub", "subjet"))
+    audience: str = Field(validation_alias=AliasChoices("aud", "audience"))
+    issued_at: datetime = Field(validation_alias=AliasChoices("iat", "issued_at"))
+    expires_at: datetime = Field(validation_alias=AliasChoices("exp", "expires_at"))
+    authorized_party: str = Field(validation_alias=AliasChoices("azp", "authorized_party"))
     permissions: set["Permission"]

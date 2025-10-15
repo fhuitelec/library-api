@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException
 
 
-class AuthenticationResponse(BaseModel):
-    """Response model for authentication."""
+class AuthenticationError(BaseModel):
+    """Error during the authentication process."""
 
     UNAUTHENTICATED_RESOLUTION: ClassVar[str] = "You must add a bearer 'Authorization' header with a valid JWT token."
 
@@ -16,12 +16,12 @@ class AuthenticationResponse(BaseModel):
         default=None, examples=["Add X-Example header"], description="Hints on how to resolve the issue"
     )
 
-    @staticmethod
-    def jwt_error(exc: Exception, resolution: str | None = None) -> "AuthenticationResponse":
+    @classmethod
+    def jwt_error(cls, exc: Exception, resolution: str | None = None) -> "AuthenticationError":
         """Create an AuthenticationResponse from an exception."""
-        return AuthenticationResponse(detail=str(exc), resolution=resolution)
+        return AuthenticationError(detail=str(exc), resolution=resolution or cls.UNAUTHENTICATED_RESOLUTION)
 
     @classmethod
-    def unauthenticated(cls, exc: HTTPException) -> "AuthenticationResponse":
+    def unauthenticated(cls, exc: HTTPException) -> "AuthenticationError":
         """Create an AuthenticationResponse from an exception."""
-        return AuthenticationResponse(detail=exc.detail, resolution=cls.UNAUTHENTICATED_RESOLUTION)
+        return AuthenticationError(detail=exc.detail, resolution=cls.UNAUTHENTICATED_RESOLUTION)
