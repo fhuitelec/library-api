@@ -21,6 +21,8 @@ class AuthenticationSettings(BaseSettings):
     authorization_path: str = "/authorize"
     token_path: str = "/oauth/token"
 
+    swagger_client_id: str = "woDXg79hSdK9DAhmFFunvehAtlvArr8D"
+
     @property
     def authorization(self) -> str:
         """Get the authorization URL with audience."""

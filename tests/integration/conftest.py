@@ -14,8 +14,8 @@ from pydantic import ConfigDict, BaseModel
 from pytest_httpx import HTTPXMock
 from starlette.testclient import TestClient
 
-from library_api.main import app
-from library_api.security import Permission, JWT
+from library_api.api.kernel import app
+from library_api.api.security import Permission, JWT
 
 
 @pytest.fixture(name="jwk_kid", scope="package")

@@ -14,9 +14,9 @@ from fastapi import Depends
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from jwt import InvalidSignatureError
 
-from library_api.cache import key_id_hashkey
-from library_api.config import AuthenticationSettings, get_auth_settings, get_auth_client
-from library_api.security import JWT
+from library_api.api.caching import key_id_hashkey
+from library_api.api.config import AuthenticationSettings, get_auth_settings, get_auth_client
+from library_api.api.security import JWT
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl="https://fabien-sh.eu.auth0.com/authorize?audience=library-api",

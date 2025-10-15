@@ -10,7 +10,7 @@ from typing import (
     TypeAlias,
 )
 
-from library_api.security import JWT
+from library_api.api.security import JWT
 
 EndpointArguments = ParamSpec("EndpointArguments")
 EndpointReturn = TypeVar("EndpointReturn", covariant=True)

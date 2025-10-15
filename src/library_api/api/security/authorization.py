@@ -1,7 +1,5 @@
 """Authorization utilities for FastAPI endpoints."""
 
-from __future__ import annotations
-
 from enum import StrEnum, auto
 from functools import wraps
 from typing import (
@@ -9,9 +7,10 @@ from typing import (
 )
 
 from fastapi import HTTPException, status
-from library_api.security import Permission
-from library_api.security.authentication import JWT
-from library_api.security.typing import EndpointFunction, HandlerWithJWT, EndpointArguments, EndpointReturn
+
+from library_api.api.security import JWT
+from library_api.api.security import Permission
+from library_api.api.security.typing import EndpointFunction, HandlerWithJWT, EndpointArguments, EndpointReturn
 
 
 class PermissionMatcher(StrEnum):
@@ -73,14 +72,7 @@ def requires_permissions(
         async def wrapper(
             jwt: JWT, *args: EndpointArguments.args, **kwargs: EndpointArguments.kwargs
         ) -> EndpointReturn:
-            """Perform runtime authorization checks before executing the handler.
-
-            1. Retrieve the `jwt` argument from the endpoint call.
-            2. Verify its presence and structure.
-            3. Compare user permissions against the required set.
-            4. Raise HTTP 403 if authorization fails.
-            5. Invoke the wrapped handler if checks pass.
-            """
+            """Perform runtime authorization checks before executing the handler."""
             if jwt is None:
                 raise TypeError(
                     "requires_permissions() decorator needs an argument "

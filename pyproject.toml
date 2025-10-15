@@ -26,7 +26,7 @@ dev = [
 ]
 
 [project.scripts]
-library-api = "library_api.main:server"
+library-api = "library_api.api.kernel:server"
 
 [tool.ruff]
 line-length = 120
