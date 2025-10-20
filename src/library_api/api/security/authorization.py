@@ -1,7 +1,6 @@
 """Authorization utilities for FastAPI endpoints."""
 
 from dataclasses import dataclass, field
-from enum import StrEnum, auto
 from typing import (
     Annotated,
 )
@@ -13,20 +12,6 @@ from library_api.api.security import Permission
 from library_api.api.security.authentication import authentication
 
 
-class PermissionMatcher(StrEnum):
-    """Define how to match required permissions against granted permissions."""
-
-    ALL = auto()
-    ANY = auto()
-
-    def enforce(self, required: frozenset[Permission], granted: set[Permission]) -> bool:
-        """Check if the granted permissions satisfy the required permissions."""
-        if self == PermissionMatcher.ALL:
-            return required.issubset(granted)
-
-        return not required.isdisjoint(granted)
-
-
 @dataclass(frozen=True)
 class RequirePermissions:
     """Enforce presence of a `jwt` parameter and validate required permissions.
@@ -34,7 +19,6 @@ class RequirePermissions:
     Args:
         required: Specify the permissions required to access the endpoint.
                   Example: {Permission.BOOK_READ, Permission.BOOK_MANAGE}.
-        matcher: Set to ALL to require all permissions, or ANY to require at least one.
 
     Returns:
         Return a FastAPI dependency function that checks user permissions from the provided JWT claims.
@@ -43,13 +27,12 @@ class RequirePermissions:
         @router.post(
             "/example",
             dependencies=[
-                require_permissions(required={Permission.LOAN_APPROVE}, matcher=PermissionMatcher.ANY)
+                require_permissions(required={Permission.LOAN_APPROVE})
             ]
         )
 
     """
 
-    matcher: PermissionMatcher = PermissionMatcher.ALL
     required: frozenset[Permission] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
@@ -59,7 +42,7 @@ class RequirePermissions:
 
     def __call__(self, jwt: Annotated[JWT, Depends(authentication)]) -> None:
         """Enforce required permissions against the JWT claims."""
-        if self.matcher.enforce(self.required, jwt.permissions):
+        if self.required.issubset(jwt.permissions):
             return
 
         raise HTTPException(
@@ -68,14 +51,10 @@ class RequirePermissions:
                 "error": "insufficient_permissions",
                 "required": sorted(self.required),
                 "granted": sorted(jwt.permissions),
-                "match": self.matcher,
             },
         )
 
 
-def require_permissions(
-    required: set[Permission],
-    matcher: PermissionMatcher = PermissionMatcher.ALL,
-) -> Depends:  # pyright: ignore[reportGeneralTypeIssues]
+def require_permissions(required: set[Permission]) -> Depends:  # pyright: ignore[reportGeneralTypeIssues]
     """Syntactic sugar to declare a RequirePermissions dependency."""
-    return Depends(RequirePermissions(required=frozenset(required), matcher=matcher))
+    return Depends(RequirePermissions(required=frozenset(required)))

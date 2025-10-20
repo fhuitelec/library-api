@@ -1,4 +1,5 @@
 """Integration tests for authentication."""
+
 from typing import Annotated
 
 import pytest
