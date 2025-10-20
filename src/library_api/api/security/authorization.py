@@ -1,6 +1,5 @@
 """Authorization utilities for FastAPI endpoints."""
 
-from dataclasses import dataclass, field
 from typing import (
     Annotated,
 )
@@ -12,7 +11,6 @@ from library_api.api.security import Permission
 from library_api.api.security.authentication import authentication
 
 
-@dataclass(frozen=True)
 class RequirePermissions:
     """Enforce presence of a `jwt` parameter and validate required permissions.
 
@@ -33,7 +31,9 @@ class RequirePermissions:
 
     """
 
-    required: frozenset[Permission] = field(default_factory=frozenset)
+    def __init__(self, required: frozenset[Permission]) -> None:
+        """Initialize the RequirePermissions dependency."""
+        self.required = required
 
     def __post_init__(self) -> None:
         """Validate the object consistency."""
