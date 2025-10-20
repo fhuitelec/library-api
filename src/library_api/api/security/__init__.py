@@ -22,7 +22,7 @@ class JWT(BaseModel):
 
     issuer: str = Field(validation_alias=AliasChoices("iss", "issuer"))
     subjet: str = Field(validation_alias=AliasChoices("sub", "subjet"))
-    audience: str = Field(validation_alias=AliasChoices("aud", "audience"))
+    audience: str | list[str] = Field(validation_alias=AliasChoices("aud", "audience"))
     issued_at: datetime = Field(validation_alias=AliasChoices("iat", "issued_at"))
     expires_at: datetime = Field(validation_alias=AliasChoices("exp", "expires_at"))
     authorized_party: str = Field(validation_alias=AliasChoices("azp", "authorized_party"))
