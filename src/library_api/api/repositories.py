@@ -102,12 +102,18 @@ class InMemoryLoanRepository(LoanRepository):
         return loan
 
 
+BOOK_IDS = [
+    uuid.UUID("daa5931c-87e1-4111-bf05-639144dc46f5"),
+    uuid.UUID("3f5f7000-c2c0-4d14-888c-c5a5631b5a38"),
+    uuid.UUID("e25921b9-e681-4b03-88be-2e411fec5d2b"),
+]
+
 fake_book_repository = InMemoryBookRepository()
 fake_loan_repository = InMemoryLoanRepository(fake_book_repository)
 
 fake_book_repository.create(
     Book(
-        id=uuid.UUID("daa5931c-87e1-4111-bf05-639144dc46f5"),
+        id=BOOK_IDS[0],
         issue=1,
         isbn="978-3-16-148410-0",
         title="Book 1",
@@ -116,7 +122,7 @@ fake_book_repository.create(
 )
 fake_book_repository.create(
     Book(
-        id=uuid.UUID("3f5f7000-c2c0-4d14-888c-c5a5631b5a38"),
+        id=BOOK_IDS[1],
         issue=2,
         isbn="978-3-16-148410-0",
         title="Book 1",
@@ -125,7 +131,7 @@ fake_book_repository.create(
 )
 fake_book_repository.create(
     Book(
-        id=uuid.UUID("e25921b9-e681-4b03-88be-2e411fec5d2b"),
+        id=BOOK_IDS[2],
         issue=1,
         isbn="978-4-25-652123-0",
         title="Book 2",

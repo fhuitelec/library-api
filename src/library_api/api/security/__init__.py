@@ -14,6 +14,7 @@ class Permission(StrEnum):
     LOAN_APPROVE = "loan:approve"
     LOAN_REQUEST = "loan:request"
     LOAN_READ = "loan:read"
+    LOAN_READ_ALL = "loan:read:*"
 
 
 class JWT(BaseModel):
