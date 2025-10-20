@@ -12,7 +12,6 @@ from starlette.responses import Response
 
 from library_api.api.config import get_auth_settings
 from library_api.api.routers.auth import router as auth_router
-from library_api.api.routers.temporary import router as temporary_router
 from library_api.api.routers.loans import router as loans_router
 from library_api.api.security.exceptions import (
     AuthenticationError,
@@ -39,7 +38,6 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
-app.include_router(temporary_router)
 app.include_router(loans_router)
 
 
