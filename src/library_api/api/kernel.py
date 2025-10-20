@@ -17,6 +17,7 @@ from library_api.api.security.exceptions import (
     AuthenticationError,
     jwt_exception_handler,
     unauthorized_exception_handler,
+    AuthorizationError,
 )
 
 
@@ -30,7 +31,10 @@ async def native_http_exception_dispatcher_handler(request: Request, exc: HTTPEx
 
 app = FastAPI(
     exception_handlers={PyJWTError: jwt_exception_handler, HTTPException: native_http_exception_dispatcher_handler},
-    responses={HTTPStatus.UNAUTHORIZED: {"model": AuthenticationError}},
+    responses={
+        HTTPStatus.UNAUTHORIZED: {"model": AuthenticationError},
+        HTTPStatus.FORBIDDEN: {"model": AuthorizationError},
+    },
     swagger_ui_init_oauth={
         "usePkceWithAuthorizationCodeGrant": True,
         "clientId": get_auth_settings().swagger_client_id,

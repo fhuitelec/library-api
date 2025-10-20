@@ -38,7 +38,7 @@ def test_no_permission(client: TestClient, jwk: JWK) -> None:
     assert isinstance(body, dict)
     detail = body.get("detail")
     assert isinstance(detail, dict)
-    assert detail.get("error") == "insufficient_permissions"
+    assert detail.get("reason") == "Insufficient permissions"
     assert detail.get("required") == [Permission.BOOK_READ]
     assert detail.get("granted") == []
 
@@ -54,6 +54,6 @@ def test_permission_mismatch(client: TestClient, jwk: JWK) -> None:
     assert isinstance(body, dict)
     detail = body.get("detail")
     assert isinstance(detail, dict)
-    assert detail.get("error") == "insufficient_permissions"
+    assert detail.get("reason") == "Insufficient permissions"
     assert detail.get("required") == [Permission.BOOK_READ]
     assert detail.get("granted") == granted

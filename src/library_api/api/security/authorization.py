@@ -9,6 +9,7 @@ from fastapi import HTTPException, status, Depends
 from library_api.api.security import JWT
 from library_api.api.security import Permission
 from library_api.api.security.authentication import authentication
+from library_api.api.security.exceptions import AuthorizationDetail
 
 
 class RequirePermissions:
@@ -47,11 +48,11 @@ class RequirePermissions:
 
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "error": "insufficient_permissions",
-                "required": sorted(self.required),
-                "granted": sorted(jwt.permissions),
-            },
+            detail=AuthorizationDetail(
+                reason="Insufficient permissions",
+                required=sorted(self.required),
+                granted=sorted(jwt.permissions),
+            ).model_dump(),
         )
 
 
