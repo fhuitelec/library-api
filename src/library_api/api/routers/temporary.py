@@ -1,12 +1,11 @@
 """Authentication related routes."""
 
-from typing import Annotated, Union
+from typing import Union
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from library_api.api.security import JWT, Permission
-from library_api.api.security.authentication import authentication
-from library_api.api.security.authorization import requires_permissions, PermissionMatcher
+from library_api.api.security import Permission
+from library_api.api.security.authorization import PermissionMatcher, require_permissions
 
 router = APIRouter(
     prefix="/tmp",
@@ -15,8 +14,13 @@ router = APIRouter(
 
 
 @router.get("/")
-@requires_permissions({Permission.BOOK_READ, Permission.LOAN_APPROVE}, matcher=PermissionMatcher.ANY)
-async def read_root(jwt: Annotated[JWT, Depends(authentication)]) -> dict[str, str]:
+@router.get(
+    "/",
+    dependencies=[
+        require_permissions(required={Permission.BOOK_READ, Permission.LOAN_APPROVE}, matcher=PermissionMatcher.ANY)
+    ],
+)
+async def read_root() -> dict[str, str]:
     """Return a greeting message."""
     return {
         "Hello": "World",

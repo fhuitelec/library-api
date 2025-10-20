@@ -1,16 +1,16 @@
 """Authorization utilities for FastAPI endpoints."""
 
+from dataclasses import dataclass, field
 from enum import StrEnum, auto
-from functools import wraps
 from typing import (
-    Callable,
+    Annotated,
 )
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 
 from library_api.api.security import JWT
 from library_api.api.security import Permission
-from library_api.api.security.typing import EndpointFunction, HandlerWithJWT, EndpointArguments, EndpointReturn
+from library_api.api.security.authentication import authentication
 
 
 class PermissionMatcher(StrEnum):
@@ -19,7 +19,7 @@ class PermissionMatcher(StrEnum):
     ALL = auto()
     ANY = auto()
 
-    def enforce(self, required: set[Permission], granted: set[Permission]) -> bool:
+    def enforce(self, required: frozenset[Permission], granted: set[Permission]) -> bool:
         """Check if the granted permissions satisfy the required permissions."""
         if self == PermissionMatcher.ALL:
             return required.issubset(granted)
@@ -27,10 +27,8 @@ class PermissionMatcher(StrEnum):
         return not required.isdisjoint(granted)
 
 
-def requires_permissions(
-    required: set[Permission],
-    matcher: PermissionMatcher = PermissionMatcher.ALL,
-) -> Callable[[EndpointFunction], EndpointFunction]:
+@dataclass(frozen=True)
+class RequirePermissions:
     """Enforce presence of a `jwt` parameter and validate required permissions.
 
     Args:
@@ -39,59 +37,45 @@ def requires_permissions(
         matcher: Set to ALL to require all permissions, or ANY to require at least one.
 
     Returns:
-        Return a decorator that checks user permissions from the provided JWT claims.
+        Return a FastAPI dependency function that checks user permissions from the provided JWT claims.
 
     Examples:
-        @requires_permissions({Permission.BOOK_READ})
-        async def get_book(jwt: JWT, book_id: str):
-            ...
-
-        @requires_permissions({Permission.BOOK_MANAGE, Permission.LOAN_APPROVE}, PermissionMatcher.ANY)
-        async def admin_endpoint(jwt: JWT):
-            ...
+        @router.post(
+            "/example",
+            dependencies=[
+                require_permissions(required={Permission.LOAN_APPROVE}, matcher=PermissionMatcher.ANY)
+            ]
+        )
 
     """
-    if len(required) < 1:
-        raise ValueError("At least one permission must be specified.")
 
-    if not all(isinstance(perm, Permission) for perm in required):
-        raise ValueError("All required permissions must be valid Permission enum values.")
+    matcher: PermissionMatcher = PermissionMatcher.ALL
+    required: frozenset[Permission] = field(default_factory=frozenset)
 
-    def decorator(
-        func: HandlerWithJWT[EndpointArguments, EndpointReturn],
-    ) -> HandlerWithJWT[EndpointArguments, EndpointReturn]:
-        """Apply the authorization logic to the FastAPI endpoint.
+    def __post_init__(self) -> None:
+        """Validate the object consistency."""
+        if len(self.required) < 1:
+            raise ValueError("At least one permission must be specified.")
 
-        Ensure that:
-        - The endpoint defines a `jwt` parameter (enforced by typing).
-        - Runtime validation confirms that `jwt` is provided and is a JWT instance.
-        - The user's permissions match the required permissions.
-        """
+    def __call__(self, jwt: Annotated[JWT, Depends(authentication)]) -> None:
+        """Enforce required permissions against the JWT claims."""
+        if self.matcher.enforce(self.required, jwt.permissions):
+            return
 
-        @wraps(func)
-        async def wrapper(
-            jwt: JWT, *args: EndpointArguments.args, **kwargs: EndpointArguments.kwargs
-        ) -> EndpointReturn:
-            """Perform runtime authorization checks before executing the handler."""
-            if jwt is None:
-                raise TypeError(
-                    "requires_permissions() decorator needs an argument "
-                    "'jwt: library_api.security.authentication.JWT' in the endpoint signature."
-                )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": "insufficient_permissions",
+                "required": sorted(self.required),
+                "granted": sorted(jwt.permissions),
+                "match": self.matcher,
+            },
+        )
 
-            if not matcher.enforce(required, jwt.permissions):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail={
-                        "error": "insufficient_permissions",
-                        "required": sorted(required),
-                        "granted": sorted(jwt.permissions),
-                        "match": matcher,
-                    },
-                )
 
-            return await func(jwt, *args, **kwargs)
-
-        return wrapper
-
-    return decorator
+def require_permissions(
+    required: set[Permission],
+    matcher: PermissionMatcher = PermissionMatcher.ALL,
+) -> Depends:  # pyright: ignore[reportGeneralTypeIssues]
+    """Syntactic sugar to declare a RequirePermissions dependency."""
+    return Depends(RequirePermissions(required=frozenset(required), matcher=matcher))
