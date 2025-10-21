@@ -1,11 +1,11 @@
 meta {
-  name: Read all loans
+  name: Read my loans
   type: http
-  seq: 4
+  seq: 3
 }
 
 get {
-  url: {{base_url}}/loans
+  url: {{base_url}}/loans/me
   body: none
   auth: inherit
 }

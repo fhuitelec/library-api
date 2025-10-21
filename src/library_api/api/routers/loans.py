@@ -42,7 +42,13 @@ async def approve_a_loan(loan: LoanApprove) -> Loan:
     return fake_loan_repository.approve(loan.loan_id)
 
 
-@router.get("/all", dependencies=[require_permissions(required={Permission.LOAN_READ_ALL})])
+@router.get("/me", dependencies=[require_permissions(required={Permission.LOAN_READ})])
+async def list_loans_for_a_user(jwt: Annotated[JWT, Depends(authentication)]) -> list[Loan]:
+    """List all book loans."""
+    return fake_loan_repository.list(user_id=jwt.subject)
+
+
+@router.get("/", dependencies=[require_permissions(required={Permission.LOAN_READ_ALL})])
 async def list_all_loans() -> list[Loan]:
     """List all book loans."""
     return fake_loan_repository.list_all()
