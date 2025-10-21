@@ -73,7 +73,7 @@ def craft_jwt(
 
     jwt = JWT(
         issuer="https://fabien-sh.eu.auth0.com/",
-        subjet="auth0|e653d123e9687d9c90d11d92",
+        subject="auth0|e653d123e9687d9c90d11d92",
         audience="library-api",
         issued_at=issued_at,
         expires_at=expired_at,
@@ -85,7 +85,7 @@ def craft_jwt(
         headers={"kid": jwk.key_id},
         payload={
             "iss": jwt.issuer,
-            "sub": jwt.subjet,
+            "sub": jwt.subject,
             "aud": jwt.audience,
             "iat": int(jwt.issued_at.timestamp()),
             "exp": int(jwt.expires_at.timestamp()),

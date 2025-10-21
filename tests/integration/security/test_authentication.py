@@ -47,7 +47,7 @@ def test_valid_jwt(client: TestClient, jwk: JWK) -> None:
     body = response.json()
     assert body["issuer"] == jwt.issuer
     assert body["audience"] == jwt.audience
-    assert body["subjet"] == jwt.subjet
+    assert body["subject"] == jwt.subject
     assert body["issued_at"] == jwt.issued_at.strftime("%Y-%m-%dT%H:%M:%SZ")
     assert body["expires_at"] == jwt.expires_at.strftime("%Y-%m-%dT%H:%M:%SZ")
     assert body["authorized_party"] == jwt.authorized_party

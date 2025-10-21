@@ -33,7 +33,7 @@ class LoanApprove(BaseModel):
 @router.post("/", dependencies=[require_permissions(required={Permission.LOAN_REQUEST})])
 async def request_a_loan(loan: LoanRequest, jwt: Annotated[JWT, Depends(authentication)]) -> Loan:
     """Request a new loan for a book."""
-    return fake_loan_repository.request(book_id=loan.book_id, user_id=jwt.subjet)
+    return fake_loan_repository.request(book_id=loan.book_id, user_id=jwt.subject)
 
 
 @router.post("/approve", dependencies=[require_permissions(required={Permission.LOAN_APPROVE})])

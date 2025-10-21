@@ -21,7 +21,7 @@ class JWT(BaseModel):
     """Representation of a JSON Web Token."""
 
     issuer: str = Field(validation_alias=AliasChoices("iss", "issuer"))
-    subjet: str = Field(validation_alias=AliasChoices("sub", "subjet"))
+    subject: str = Field(validation_alias=AliasChoices("sub", "subject"))
     audience: str | list[str] = Field(validation_alias=AliasChoices("aud", "audience"))
     issued_at: datetime = Field(validation_alias=AliasChoices("iat", "issued_at"))
     expires_at: datetime = Field(validation_alias=AliasChoices("exp", "expires_at"))
