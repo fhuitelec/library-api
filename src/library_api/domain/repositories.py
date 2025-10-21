@@ -40,6 +40,11 @@ class LoanRepository(ABC):
         ...
 
     @abstractmethod
+    def list_all(self) -> List[Loan]:
+        """List all loans."""
+        ...
+
+    @abstractmethod
     def request(self, book_id: uuid.UUID, user_id: str) -> Loan:
         """Request a new loan."""
         ...
