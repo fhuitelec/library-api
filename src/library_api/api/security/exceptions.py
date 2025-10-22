@@ -28,7 +28,7 @@ class AuthorizationError(BaseModel):
 class AuthenticationError(BaseModel):
     """Error during the authentication process."""
 
-    detail: str | None = Field(examples=["Cannot decode JWT"], description="Details about the authentication issue")
+    detail: str = Field(examples=["Cannot decode JWT"], description="Details about the authentication issue")
 
 
 async def jwt_exception_handler(_: Request, exc: PyJWTError) -> Response:

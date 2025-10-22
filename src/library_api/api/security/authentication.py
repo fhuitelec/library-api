@@ -1,7 +1,6 @@
 """Authentication using OAuth2."""
 
 import json
-import logging
 from datetime import timedelta
 from typing import Annotated
 
@@ -24,13 +23,9 @@ def _get_json_web_key(httpx_client: httpx.Client, jwks_path: str, kid: str | Non
     if not kid:
         return None
 
-    try:
-        response = httpx_client.get(url=jwks_path)
-        response.raise_for_status()
-    except httpx.HTTPStatusError as e:
-        if e.response:
-            logging.log(msg=e.response.text, level=logging.ERROR)
-        raise
+    response = httpx_client.get(url=jwks_path)
+    response.raise_for_status()
+
     jwks = response.json()
 
     for jwk in jwks["keys"]:
@@ -46,7 +41,11 @@ def authentication(
     auth_settings: Annotated[AuthenticationSettings, Depends(get_auth_settings)],
 ) -> JWT:
     """Authenticate a request using a JWT token."""
-    kid = pyjwt.get_unverified_header(raw_jwt)["kid"]
+    kid = pyjwt.get_unverified_header(raw_jwt).get("kid")
+    if kid is None:
+        msg = "No 'kid' found in the JWT header."
+        raise InvalidSignatureError(msg)
+
     public_key = _get_json_web_key(auth_client, auth_settings.jwks_path, kid)
 
     if public_key is None:
