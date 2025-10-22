@@ -1,7 +1,26 @@
 auth {
-  mode: bearer
+  mode: oauth2
 }
 
-auth:bearer {
-  token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNVQ3F1cHhobWlGWXVPSjlxVFUtMSJ9.eyJpc3N1ZXIiOiJodHRwczovL2ZhYmllbi1zaC5ldS5hdXRoMC5jb20vIiwic3ViamVjdCI6ImhleUBmYWJpZW4uc2giLCJhdWRpZW5jZSI6WyJsaWJyYXJ5LWFwaSIsImh0dHBzOi8vZmFiaWVuLXNoLmV1LmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpc3N1ZWRfYXQiOiIyMDI1LTEwLTIwVDE2OjQ4OjQwWiIsImV4cGlyZXNfYXQiOiIyMDI1LTEwLTIwVDE3OjQ4OjQwWiIsImF1dGhvcml6ZWRfcGFydHkiOiJ3b0RYZzc5aFNkSzlEQWhtRkZ1bnZlaEF0bHZBcnI4RCIsInBlcm1pc3Npb25zIjpbImxvYW46cmVxdWVzdCIsImJvb2s6cmVhZCIsImxvYW46cmVhZCJdfQ.KHEnEdqmc5DteHqfZ9xXS17Pagi5TRHE_kLTiaBwGv8COyYXVN39e943NZThl6vsM27oSl0xTzAR7I9U-sVNcgpVEojDf7iaDSEm0M-kM_VoXUE82qzAc18dvqJHPbPc-Y_m-WIfDZLPz0vPRs2mEFq0bZvAvU7WWDoGETY8I1bhqiXKvEu1Iin2MJCS-YKGyYzWVYqM9xgOQdw4-DfwqNiqiMphHCvwBKIYf16BGtAQfDg1anqD4qMdg7hQFaNxQ6dcG4Nh3FoGVH5h32t_NZLDqDUllzz4ruLamf1UGU7zu0Ol_RWaY9SZudGf3R2aJMnSJPGgEFiTvNB3Ej1TpM3oLm4zxS0ErhiOg1VW4GxvMzw-wgMWDVw3Vr3TiMJtUGikcHUKWPVrDfXHaGv9CD4BniJ22Yvm_4wddBuq2JCjx0tOm438e3yEXrJyK2bKQP7np3lV2TjgcbiIyrA8GaKbzYVMNWS77NZOAwbmE_q5PzuFZ0W5tD3xfB4oGhiHcrgO2YlgmVY7-yh2L8Nj7whfxlO_9MrW13Ldj2LQZWhLuZJiUvzxzo0O_NlrHAysu5mTqUVjdQDhkZxNLIgpdtj9jhhVYpf7Qw0UnzZBczBQ5rXfrZom21G4RQ-1U_kXjAkVmn8Q2TATb7y1kvVPlW6G1JP90DphOtBx8YRNAj4
+auth:oauth2 {
+  grant_type: authorization_code
+  callback_url: http://127.0.0.1:8000/bruno
+  authorization_url: {{auth0_authorization_url}}
+  access_token_url: {{auth0_access_token_url}}
+  refresh_token_url: 
+  client_id: {{auth0_client_id}}
+  client_secret: 
+  scope: offline_access openid
+  state: 
+  pkce: false
+  credentials_placement: body
+  credentials_id: credentials
+  token_placement: header
+  token_header_prefix: Bearer
+  auto_fetch_token: true
+  auto_refresh_token: true
+}
+
+auth:oauth2:additional_params:auth_req:queryparams {
+  audience: library-api
 }

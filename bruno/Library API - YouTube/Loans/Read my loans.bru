@@ -5,13 +5,9 @@ meta {
 }
 
 get {
-  url: {{base_url}}/loans/me?user_id=hey@fabien.sh
+  url: {{base_url}}/loans/me
   body: none
-  auth: none
-}
-
-params:query {
-  user_id: hey@fabien.sh
+  auth: inherit
 }
 
 settings {
