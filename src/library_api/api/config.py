@@ -5,6 +5,7 @@ from typing import Annotated
 
 import httpx
 from fastapi.params import Depends
+from fastapi.security import OAuth2AuthorizationCodeBearer, OAuth2
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,3 +40,13 @@ def get_auth_settings() -> AuthenticationSettings:
 def get_auth_client(auth_settings: Annotated[AuthenticationSettings, Depends(get_auth_settings)]) -> httpx.Client:
     """Get the HTTP client for authentication."""
     return httpx.Client(base_url=auth_settings.tenant_base_url, timeout=5)
+
+
+def oauth() -> OAuth2:
+    """Get the OAuth2 scheme for authentication."""
+    auth_settings = get_auth_settings()
+    return OAuth2AuthorizationCodeBearer(
+        authorizationUrl=f"{auth_settings.tenant_base_url}{auth_settings.authorization}",
+        refreshUrl=f"{auth_settings.tenant_base_url}{auth_settings.authorization}",
+        tokenUrl=f"{auth_settings.tenant_base_url}{auth_settings.token_path}",
+    )
