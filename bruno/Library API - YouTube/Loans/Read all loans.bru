@@ -1,0 +1,16 @@
+meta {
+  name: Read all loans
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/loans
+  body: none
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

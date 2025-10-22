@@ -1,0 +1,27 @@
+meta {
+  name: Request a loan
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/loans
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "book_id": "daa5931c-87e1-4111-bf05-639144dc46f5",
+    "user_id": "hey@fabien.sh"
+  }
+}
+
+vars:post-response {
+  loan_id: res.body.id
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

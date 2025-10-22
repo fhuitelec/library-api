@@ -1,0 +1,23 @@
+meta {
+  name: Approve a loan
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/loans/approve
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "loan_id": "{{loan_id}}"
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Read my loans
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/loans/me?user_id=hey@fabien.sh
+  body: none
+  auth: none
+}
+
+params:query {
+  user_id: hey@fabien.sh
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
