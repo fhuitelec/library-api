@@ -1,13 +1,21 @@
 """Kernel of the FastAPI HTTP application."""
 
+from http import HTTPStatus
+
 import uvicorn
 from fastapi import FastAPI
+from jwt import PyJWTError
 
 from library_api.api.config import get_auth_settings
 from library_api.api.routers.auth import router as auth_router
 from library_api.api.routers.loans import router as loans_router
+from library_api.api.security.exceptions import jwt_exception_handler, AuthenticationError
 
 app = FastAPI(
+    exception_handlers={PyJWTError: jwt_exception_handler},
+    responses={
+        HTTPStatus.UNAUTHORIZED: {"model": AuthenticationError},
+    },
     swagger_ui_init_oauth={
         "usePkceWithAuthorizationCodeGrant": True,
         "clientId": get_auth_settings().swagger_client_id,
